@@ -21,6 +21,7 @@ async function main() {
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(express.urlencoded({extended: true}));
 
 app.get('/', (req, res) =>   {
     res.send("I am root");
@@ -31,7 +32,7 @@ app.get('/listings', async (req, res) => {
     const allListings = await Listing.find({});
     res.render("listings/index.ejs", {allListings});
 });
-git
+
 app.listen(8080, () => {
     console.log('Server is running on http://localhost:8080');
 });
