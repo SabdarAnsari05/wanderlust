@@ -69,6 +69,14 @@ app.put('/listings/:id', async (req, res) => {
     res.redirect(`/listings/${id}`);
 });
 
+// Delete Route
+app.delete('/listings/:id', async (req, res) => {
+    const {id} = req.params;
+    let deletedListing = await Listing.findByIdAndDelete(id);
+    console.log(deletedListing);
+    res.redirect('/listings');
+});
+
 app.listen(8080, () => {
     console.log('Server is running on http://localhost:8080');
 });
