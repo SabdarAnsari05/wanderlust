@@ -15,7 +15,11 @@ const listingSchema = new Schema ({
         ? "https://unsplash.com/photos/white-concrete-building-g39p1kDjvSY" 
         : v,
     },
-    price: Number,
+    price: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
     location: String,
     country: String,
 });
