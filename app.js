@@ -8,6 +8,7 @@ const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
 const { listingSchema } = require("./schema.js");
+const { resourceLimits } = require("worker_threads");
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
@@ -36,6 +37,17 @@ app.get("/", (req, res) => {
   res.send("I am root");
 });
 
+// middleware of validations for schema
+const validateListing = (req, res, next) => {
+  let { error } = listingSchema.validate(req.body);
+  if (error) {
+    let errMsg = error.details.map((el) => el.message).join(",");
+    throw new ExpressError(400, errMsg);
+  } else {
+    next();
+  }
+};
+
 // Index Route
 app.get(
   "/listings",
@@ -63,12 +75,8 @@ app.get(
 // Create Route
 app.post(
   "/listings",
+  validateListing,
   wrapAsync(async (req, res, next) => {
-    let result = listingSchema.validate(req.body);
-    console.log(result);
-    if(result.error) {
-      throw new ExpressError(400, result.error);
-    }
     const newListing = new Listing(req.body.listing);
     await newListing.save();
     res.redirect("/listings");
@@ -88,10 +96,8 @@ app.get(
 // Update Route
 app.put(
   "/listings/:id",
+  validateListing,
   wrapAsync(async (req, res) => {
-    if(!req.body || !req.body.listing) {
-        throw new ExpressError(400, "Send valid data for listing");
-    }
     const { id } = req.params;
     const listing = await Listing.findByIdAndUpdate(id, {
       ...req.body.listing,
@@ -112,14 +118,14 @@ app.delete(
 );
 
 // display standard error when not match to any routes
-app.all('*path', (req, res, next) => {
+app.all("*path", (req, res, next) => {
   next(new ExpressError(404, "Page Not Found!"));
 });
 
 // middleware to handle error
 app.use((err, req, res, next) => {
-  let { statusCode = 500, message="something went wrong!" } = err;
-  res.status(statusCode).render("error.ejs", {message});
+  let { statusCode = 500, message = "something went wrong!" } = err;
+  res.status(statusCode).render("error.ejs", { message });
 });
 
 app.listen(8080, () => {
